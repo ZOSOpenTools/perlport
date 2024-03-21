@@ -1,5 +1,5 @@
 # bump: perl-version /PERL_VERSION="(.*)"/ https://github.com/Perl/perl5.git|semver:*
-PERL_VERSION="5.39.8"
+PERL_VERSION="5.39.9"
 
 export ZOPEN_BUILD_LINE="STABLE"
 export ZOPEN_STABLE_DEPS="curl gzip make git make zoslib sed"
