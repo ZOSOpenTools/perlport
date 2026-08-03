@@ -1,0 +1,52 @@
+diff --git a/configpm b/configpm
+index 0c46b9e..7c8c20e 100755
+--- a/configpm
++++ b/configpm
+@@ -438,9 +438,46 @@ my $relocation_code = uncomment <<'EOT';
+ #
+ #    sub relocate_inc {
+ #      my $libdir = shift;
+-#      return $libdir unless $libdir =~ s!^\.\.\./!!;
++#      if ($libdir =~ m!^(?:\./)?lib/5\.44\.0!) {
++#      	  return $libdir;
++#      }
++#      #return $libdir unless $libdir =~ s!^\.\.\/\.\.\/!!;
++#      my $used_dotdotdot = 0;
++#      if ($libdir =~ s!^\.\.\./\.\./!!) {
++#      	   # handle relocatable placeholder form used in this build
++#      	   $used_dotdotdot = 1;
++#      }
++#      elsif ($libdir =~ s!^\.\./\.\./!!) {
++#          # handle normal ../../ form
++#      }
++#      else {
++#          return $libdir;
++#      }
++#
+ #      my $prefix = $^X;
++#      if ($prefix !~ m!/!) {
++#          require Cwd;
++#          require File::Spec;
++#          my $resolved;
++#          for my $dir (File::Spec->path()) {
++#          	next unless defined $dir && length $dir;
++#          	my $candidate = File::Spec->catfile($dir, $prefix);
++#          	next unless -f $candidate && -x _;
++#          	$resolved = eval { Cwd::abs_path($candidate) } || $candidate;
++#          	last;
++#          }
++#          if ($resolved) {
++#          	$prefix = $resolved;
++#          }
++#          else {
++#          	my $abs = File::Spec->rel2abs($prefix);
++#          	$prefix = eval { Cwd::abs_path($abs) } || $abs;
++#          }
++#      }
+ #      if ($prefix =~ s!/[^/]*$!!) {
++#        if ($used_dotdotdot) {
++#          $prefix =~ s!/bin$!!;
++#        }
+ #        while ($libdir =~ m!^\.\./!) {
+ #          # Loop while $libdir starts "../" and $prefix still has a trailing
+ #          # directory
