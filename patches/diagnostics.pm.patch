@@ -1,0 +1,13 @@
+diff --git a/lib/diagnostics.pm b/lib/diagnostics.pm
+index 842959a..efa2fb1 100644
+--- a/lib/diagnostics.pm
++++ b/lib/diagnostics.pm
+@@ -195,7 +195,7 @@ our $WARNTRACE = 0;
+ 
+ use Config;
+ use Text::Tabs 'expand';
+-my $privlib = $Config{privlibexp};
++my $privlib = eval { Config::relocate_inc($Config{privlibexp}) } || $Config{privlibexp};
+ if ($^O eq 'VMS') {
+     require VMS::Filespec;
+     $privlib = VMS::Filespec::unixify($privlib);
