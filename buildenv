@@ -11,12 +11,14 @@ export ZOPEN_DEV_DEPS="git make zoslib sed gettext"
 export ZOPEN_DEV_URL="https://github.com/Perl/perl5.git"
 
 export ZOPEN_CONFIGURE="./Configure"
-export ZOPEN_CONFIGURE_OPTS="-de -d -Dprefix=\${ZOPEN_INSTALL_DIR} -Duserelocatableinc -Aappend:ccflags=\" \$CFLAGS \$CPPFLAGS\" -Aappend:ldflags=\" \$LDFLAGS\" -Aappend:libs=\" \$LIBS\""
+export ZOPEN_CONFIGURE_OPTS="-de -d -Dprefix=\$ZOPEN_INSTALL_DIR -Dinstallbin=\$ZOPEN_INSTALL_DIR/bin -Dscriptdir=\$ZOPEN_INSTALL_DIR/bin -Dinstallscript=\$ZOPEN_INSTALL_DIR/bin -Duserelocatableinc -Aappend:ccflags=\" \$CFLAGS \$CPPFLAGS\" -Aappend:ldflags=\" \$LDFLAGS\" -Aappend:libs=\" \$LIBS\""
 export ZOPEN_CHECK_OPTS="test"
 
 export ZOPEN_COMP=CLANG
-
-# Perl Environment variables
+export ZOPEN_PROJECT_NAME="perl"
+export ZOPEN_NAME="perl5-${PERL_VERSION}"
+export PERL_RELOCATE_DEBUG=1
+export ZOPEN_INSTALL_OPTS="install"
 export INSTALLFLAGS="+v"
 
 zopen_append_to_zoslib_env() {
@@ -26,13 +28,31 @@ LIBPATH|prepend|PROJECT_ROOT/lib/perl5/$PERL_VERSION/os390/CORE:PROJECT_ROOT/lib
 EOF
 }
 
-zopen_post_install() {
-  install_dir=$1
+zopen_pre_install() {
+  mkdir -p "${1}"
+}
 
-  cp -f $install_dir/lib/perl5/$PERL_VERSION/os390/CORE/libperl.so $install_dir/lib/
-  cp -f $install_dir/lib/$PERL_VERSION/os390/CORE/libperl.so $install_dir/lib/
-  if [ ! -f "$install_dir/lib/libperl.so" ]; then
-    printError "libperl.so not copied"
+zopen_post_install() {
+  # make install handles the main installation correctly
+  # This function only adds zopen-specific files that make install doesn't handle
+  
+  install_dir=$1
+  build_root="${PWD}"
+
+  # Copy zopen metadata files
+  for meta_file in .releaseinfo .releaseline; do
+    if [ -f "$build_root/$meta_file" ]; then
+      cp -f "$build_root/$meta_file" "$install_dir/"
+    fi
+  done
+
+  # Copy libperl.so to lib/ for convenience (make install puts it in lib/5.44.0/os390/CORE/)
+  if [ -f "$build_root/libperl.so" ]; then
+    cp -f "$build_root/libperl.so" "$install_dir/lib/"
+  elif [ -f "$build_root/lib/$PERL_VERSION/os390/CORE/libperl.so" ]; then
+    cp -f "$build_root/lib/$PERL_VERSION/os390/CORE/libperl.so" "$install_dir/lib/"
+  else
+    printError "libperl.so not found"
   fi
 }
 

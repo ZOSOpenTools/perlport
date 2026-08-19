@@ -1,0 +1,48 @@
+diff --git a/t/lib/diagnostics_zos.t b/t/lib/diagnostics_zos.t
+new file mode 100755
+index 0000000..4a05d51
+--- /dev/null
++++ b/t/lib/diagnostics_zos.t
+@@ -0,0 +1,42 @@
++#!/usr/bin/env perl
++# Test diagnostics.pm on z/OS - pod location regression test
++
++BEGIN {
++    chdir '..' if -d '../pod' && -d '../t';
++    @INC = 'lib';
++    require './t/test.pl';
++}
++
++use strict;
++use warnings;
++use File::Spec;
++
++# Only run on z/OS
++if ($^O ne 'os390') {
++    plan skip_all => 'z/OS-specific tests';
++    exit 0;
++}
++
++plan tests => 4;
++
++# Test 1: Load diagnostics module
++use_ok('diagnostics') or BAIL_OUT("Cannot load diagnostics module");
++
++# Test 2: Check pod/perldiag.pod exists in source (during build)
++my $source_pod = 'pod/perldiag.pod';
++ok(-f $source_pod && -r $source_pod, "perldiag.pod exists in source: $source_pod");
++
++# Test 3: Verify pods/ directory does NOT exist (the bug)
++my $wrong_pod_dir = 'pods';
++ok(!-d $wrong_pod_dir, "Incorrect 'pods/' directory does not exist");
++
++# Test 4: No "couldn't find diagnostic data" error
++my $load_error;
++{
++    local $SIG{__WARN__} = sub {
++        $load_error = shift if $_[0] =~ /couldn't find diagnostic data/;
++    };
++    delete $INC{'diagnostics.pm'};
++    eval { require diagnostics; };
++}
++ok(!$load_error, "No 'couldn't find diagnostic data' error");

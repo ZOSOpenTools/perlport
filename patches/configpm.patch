@@ -1,0 +1,78 @@
+diff --git a/configpm b/configpm
+index 0c46b9e..62e5304 100755
+--- a/configpm
++++ b/configpm
+@@ -438,9 +438,60 @@ my $relocation_code = uncomment <<'EOT';
+ #
+ #    sub relocate_inc {
+ #      my $libdir = shift;
+-#      return $libdir unless $libdir =~ s!^\.\.\./!!;
++#      my $perl_version = '%s';
++#      my $used_dotdotdot = 0;
++#      if ($libdir =~ s!^\.\.\./\.\./!!) {
++#      	   # handle relocatable placeholder form used in this build
++#      	   $used_dotdotdot = 1;
++#      }
++#      elsif ($libdir =~ s!^(\.\./)+!!) {
++#          # handle any number of ../ levels
++#      }
++#      elsif ($libdir =~ m!^(?:\./)?lib/\Q$perl_version\E!) {
++#          # handle ./lib/VERSION or lib/VERSION - resolve relative to install root
++#          require File::Spec;
++#          require Cwd;
++#          my $prefix = $^X;
++#          # Get absolute path of perl binary first
++#          if ($prefix !~ m!^/!) {
++#          	$prefix = eval { Cwd::abs_path($prefix) } || File::Spec->rel2abs($prefix);
++#          }
++#          # Strip binary name to get bin directory
++#          if ($prefix =~ s!/[^/]*$!!) {
++#          	# Go up one more level from bin/ to installation root
++#          	$prefix =~ s!/[^/]*$!!;
++#          	my $abs = File::Spec->catdir($prefix, $libdir);
++#          	return eval { Cwd::abs_path($abs) } || $abs;
++#          }
++#          return $libdir;
++#      }
++#      else {
++#          return $libdir;
++#      }
+ #      my $prefix = $^X;
++#      if ($prefix !~ m!/!) {
++#      	   require Cwd;
++#      	   require File::Spec;
++#      	   my $resolved;
++#      	   for my $dir (File::Spec->path()) {
++#      	   	next unless defined $dir && length $dir;
++#      	   	my $candidate = File::Spec->catfile($dir, $prefix);
++#      	   	next unless -f $candidate && -x _;
++#      	   	$resolved = eval { Cwd::abs_path($candidate) } || $candidate;
++#      	   	last;
++#      	  }
++#      	  if ($resolved) {
++#		$prefix = $resolved;
++#	  }
++#	  else {
++#	  	my $abs = File::Spec->rel2abs($prefix);
++#	  	$prefix = eval { Cwd::abs_path($abs) } || $abs;
++#	  }
++#	}
+ #      if ($prefix =~ s!/[^/]*$!!) {
++#        if ($used_dotdotdot) {
++#          $prefix =~ s!/bin$!!;
++#        }
+ #        while ($libdir =~ m!^\.\./!) {
+ #          # Loop while $libdir starts "../" and $prefix still has a trailing
+ #          # directory
+@@ -538,9 +589,9 @@ if (%need_relocation) {
+     $relocations_in_common++ if $Common{$_};
+   }
+   if ($relocations_in_common) {
+-    $config_txt .= $relocation_code;
++    $config_txt .= sprintf $relocation_code, $myver; 
+   } else {
+-    $heavy_txt .= $relocation_code;
++    $heavy_txt .= sprintf $relocation_code, $myver; 
+   }
+ }
+ 
